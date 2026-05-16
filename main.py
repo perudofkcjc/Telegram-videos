@@ -46,15 +46,21 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             headers={
                 "User-Agent": (
                     "Mozilla/5.0 "
-                    "(Windows NT 10.0; Win64; x64) "
-                    "AppleWebKit/537.36 "
+                    "(iPhone; CPU iPhone OS 16_0 like Mac OS X) "
+                    "AppleWebKit/605.1.15 "
                     "(KHTML, like Gecko) "
-                    "Chrome/122.0 Safari/537.36"
+                    "Version/16.0 Mobile/15E148 Safari/604.1"
                 )
             }
         )
 
         url = response.url
+
+        # convertir a mbasic
+        url = url.replace(
+            "www.facebook.com",
+            "mbasic.facebook.com"
+        )
 
     except:
         pass
@@ -90,11 +96,9 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             'noplaylist': True,
 
-            'extractor_retries': 10,
+            'extractor_retries': 20,
 
-            'fragment_retries': 10,
-
-            'ignoreerrors': False,
+            'fragment_retries': 20,
 
             'nocheckcertificate': True,
 
@@ -102,10 +106,10 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 'User-Agent': (
                     'Mozilla/5.0 '
-                    '(Windows NT 10.0; Win64; x64) '
-                    'AppleWebKit/537.36 '
+                    '(iPhone; CPU iPhone OS 16_0 like Mac OS X) '
+                    'AppleWebKit/605.1.15 '
                     '(KHTML, like Gecko) '
-                    'Chrome/122.0 Safari/537.36'
+                    'Version/16.0 Mobile/15E148 Safari/604.1'
                 )
 
             }
