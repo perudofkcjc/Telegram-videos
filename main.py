@@ -58,8 +58,7 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'format': 'bv*+ba/b',
             'outtmpl': 'video.mp4',
             'quiet': False,
-            'noplaylist': True,
-            'cookiefile': 'cookies.txt'
+            'noplaylist': True
         }
 
         with YoutubeDL(ydl_opts) as ydl:
