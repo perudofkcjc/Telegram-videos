@@ -13,6 +13,7 @@ import os
 import re
 import urllib.parse
 import subprocess
+import requests
 
 # =========================
 # ACTUALIZAR YT-DLP
@@ -33,6 +34,22 @@ TOKEN = os.getenv("TOKEN")
 async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     url = update.message.text.strip()
+
+    # =========================
+    # EXPANDIR LINKS SHARE
+    # =========================
+    try:
+
+        response = requests.get(
+            url,
+            allow_redirects=True,
+            timeout=10
+        )
+
+        url = response.url
+
+    except:
+        pass
 
     # =========================
     # LIMPIAR LINKS LOGIN FACEBOOK
