@@ -46,7 +46,7 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         video = cv2.VideoCapture("video.mp4")
 
         best_frame = None
-        best_score = 0
+        best_score = -999999
 
         frame_count = 0
 
@@ -62,19 +62,44 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             frame_count += 1
 
-            # Revisar 1 frame cada 10
+            # revisar 1 frame cada 10
             if frame_count % 10 != 0:
                 continue
 
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            # Detectar nitidez
-            score = cv2.Laplacian(
+            # =========================
+            # DETECTAR NITIDEZ
+            # =========================
+            sharpness = cv2.Laplacian(
                 gray,
                 cv2.CV_64F
             ).var()
 
-            # Guardar mejor frame
+            # =========================
+            # DETECTAR OBJETOS GRANDES
+            # =========================
+            h, w = gray.shape
+
+            center = gray[
+                h//4:3*h//4,
+                w//4:3*w//4
+            ]
+
+            edges = cv2.Canny(
+                center,
+                100,
+                200
+            )
+
+            object_score = edges.sum()
+
+            # =========================
+            # SCORE FINAL
+            # =========================
+            score = sharpness - (object_score * 0.02)
+
+            # guardar mejor frame
             if score > best_score:
                 best_score = score
                 best_frame = frame
@@ -89,6 +114,15 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "No pude encontrar una captura."
             )
             return
+
+        # =========================
+        # MEJORAR CALIDAD
+        # =========================
+        best_frame = cv2.detailEnhance(
+            best_frame,
+            sigma_s=10,
+            sigma_r=0.15
+        )
 
         # =========================
         # GUARDAR IMAGEN HD
