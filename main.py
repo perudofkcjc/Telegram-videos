@@ -42,7 +42,16 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response = requests.get(
             url,
             allow_redirects=True,
-            timeout=10
+            timeout=10,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 "
+                    "(Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) "
+                    "Chrome/122.0 Safari/537.36"
+                )
+            }
         )
 
         url = response.url
@@ -108,20 +117,10 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # =========================
         with YoutubeDL(ydl_opts) as ydl:
 
-            try:
-
-                info = ydl.extract_info(
-                    url,
-                    download=True
-                )
-
-            except:
-
-                # intentar extractor genérico
-                info = ydl.extract_info(
-                    f"generic:{url}",
-                    download=True
-                )
+            info = ydl.extract_info(
+                url,
+                download=True
+            )
 
         await update.message.reply_text(
             "Buscando mejor captura..."
