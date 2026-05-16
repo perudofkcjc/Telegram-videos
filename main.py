@@ -30,7 +30,7 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # DESCARGAR VIDEO
         # =========================
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
+            'format': 'best[ext=mp4]',
             'outtmpl': 'video.mp4',
             'quiet': True
         }
@@ -62,16 +62,19 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             frame_count += 1
 
-            # revisar 1 frame cada 10
+            # Revisar 1 frame cada 10
             if frame_count % 10 != 0:
                 continue
 
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            # detectar nitidez
-            score = cv2.Laplacian(gray, cv2.CV_64F).var()
+            # Detectar nitidez
+            score = cv2.Laplacian(
+                gray,
+                cv2.CV_64F
+            ).var()
 
-            # guardar mejor frame
+            # Guardar mejor frame
             if score > best_score:
                 best_score = score
                 best_frame = frame
@@ -82,7 +85,9 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # SI NO ENCUENTRA FRAME
         # =========================
         if best_frame is None:
-            await update.message.reply_text("No pude encontrar una captura.")
+            await update.message.reply_text(
+                "No pude encontrar una captura."
+            )
             return
 
         # =========================
