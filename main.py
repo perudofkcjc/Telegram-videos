@@ -7,7 +7,6 @@ from telegram.ext import (
 )
 
 from yt_dlp import YoutubeDL
-import yt_dlp
 import cv2
 import os
 import re
@@ -74,7 +73,7 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # =========================
         ydl_opts = {
 
-            'format': 'bv*+ba/b',
+            'format': 'best',
 
             'outtmpl': 'video.mp4',
 
@@ -82,23 +81,23 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             'noplaylist': True,
 
+            'extractor_retries': 10,
+
+            'fragment_retries': 10,
+
+            'ignoreerrors': False,
+
+            'nocheckcertificate': True,
+
             'http_headers': {
 
                 'User-Agent': (
                     'Mozilla/5.0 '
-                    '(iPhone; CPU iPhone OS 16_0 like Mac OS X) '
-                    'AppleWebKit/605.1.15 '
+                    '(Windows NT 10.0; Win64; x64) '
+                    'AppleWebKit/537.36 '
                     '(KHTML, like Gecko) '
-                    'Version/16.0 Mobile/15E148 Safari/604.1'
+                    'Chrome/122.0 Safari/537.36'
                 )
-
-            },
-
-            'extractor_args': {
-
-                'facebook': {
-                    'api': 'graphql'
-                }
 
             }
 
@@ -109,10 +108,20 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # =========================
         with YoutubeDL(ydl_opts) as ydl:
 
-            info = ydl.extract_info(
-                url,
-                download=True
-            )
+            try:
+
+                info = ydl.extract_info(
+                    url,
+                    download=True
+                )
+
+            except:
+
+                # intentar extractor genérico
+                info = ydl.extract_info(
+                    f"generic:{url}",
+                    download=True
+                )
 
         await update.message.reply_text(
             "Buscando mejor captura..."
