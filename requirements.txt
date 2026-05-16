@@ -2,3 +2,4 @@ python-telegram-bot
 yt-dlp
 opencv-python-headless
 numpy
+requests
