@@ -9,6 +9,17 @@ from telegram.ext import (
 from yt_dlp import YoutubeDL
 import cv2
 import os
+import re
+import urllib.parse
+import subprocess
+
+# =========================
+# ACTUALIZAR YT-DLP
+# =========================
+subprocess.run(
+    ["pip", "install", "-U", "yt-dlp"],
+    check=True
+)
 
 # =========================
 # TOKEN DEL BOT
@@ -20,9 +31,23 @@ TOKEN = os.getenv("TOKEN")
 # =========================
 async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    url = update.message.text
+    url = update.message.text.strip()
 
-    await update.message.reply_text("Descargando reel...")
+    # =========================
+    # LIMPIAR LINKS LOGIN FACEBOOK
+    # =========================
+    if "login" in url and "next=" in url:
+
+        match = re.search(r'next=([^&]+)', url)
+
+        if match:
+            url = urllib.parse.unquote(
+                match.group(1)
+            )
+
+    await update.message.reply_text(
+        "Descargando reel..."
+    )
 
     try:
 
@@ -30,20 +55,26 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # DESCARGAR VIDEO
         # =========================
         ydl_opts = {
-            'format': 'best[ext=mp4]',
+            'format': 'bv*+ba/b',
             'outtmpl': 'video.mp4',
-            'quiet': True
+            'quiet': False,
+            'noplaylist': True,
+            'cookiefile': 'cookies.txt'
         }
 
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
-        await update.message.reply_text("Buscando mejor captura...")
+        await update.message.reply_text(
+            "Buscando mejor captura..."
+        )
 
         # =========================
         # ABRIR VIDEO
         # =========================
-        video = cv2.VideoCapture("video.mp4")
+        video = cv2.VideoCapture(
+            "video.mp4"
+        )
 
         best_frame = None
         best_score = 0
@@ -115,9 +146,11 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # SI NO ENCUENTRA FRAME
         # =========================
         if best_frame is None:
+
             await update.message.reply_text(
                 "No encontré una captura limpia."
             )
+
             return
 
         # =========================
@@ -142,7 +175,10 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # ENVIAR FOTO
         # =========================
         await update.message.reply_photo(
-            photo=open("captura_hd.png", "rb"),
+            photo=open(
+                "captura_hd.png",
+                "rb"
+            ),
             caption="Captura HD lista"
         )
 
