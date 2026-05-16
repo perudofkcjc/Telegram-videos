@@ -46,7 +46,7 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         video = cv2.VideoCapture("video.mp4")
 
         best_frame = None
-        best_score = -999999
+        best_score = 0
 
         frame_count = 0
 
@@ -62,11 +62,14 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             frame_count += 1
 
-            # revisar 1 frame cada 10
-            if frame_count % 10 != 0:
+            # revisar más frames
+            if frame_count % 5 != 0:
                 continue
 
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(
+                frame,
+                cv2.COLOR_BGR2GRAY
+            )
 
             # =========================
             # DETECTAR NITIDEZ
@@ -77,27 +80,29 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ).var()
 
             # =========================
-            # DETECTAR OBJETOS GRANDES
+            # DETECTAR MOVIMIENTO
             # =========================
-            h, w = gray.shape
-
-            center = gray[
-                h//4:3*h//4,
-                w//4:3*w//4
-            ]
-
-            edges = cv2.Canny(
-                center,
-                100,
-                200
+            blur = cv2.GaussianBlur(
+                gray,
+                (9, 9),
+                0
             )
 
-            object_score = edges.sum()
+            motion = cv2.Laplacian(
+                blur,
+                cv2.CV_64F
+            ).var()
+
+            # =========================
+            # IGNORAR FRAMES MOVIDOS
+            # =========================
+            if motion > 500:
+                continue
 
             # =========================
             # SCORE FINAL
             # =========================
-            score = sharpness - (object_score * 0.02)
+            score = sharpness
 
             # guardar mejor frame
             if score > best_score:
@@ -111,7 +116,7 @@ async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # =========================
         if best_frame is None:
             await update.message.reply_text(
-                "No pude encontrar una captura."
+                "No encontré una captura limpia."
             )
             return
 
