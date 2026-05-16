@@ -10,53 +10,123 @@ from yt_dlp import YoutubeDL
 import cv2
 import os
 
+# =========================
+# TOKEN DEL BOT
+# =========================
 TOKEN = os.getenv("TOKEN")
 
+# =========================
+# FUNCION PRINCIPAL
+# =========================
 async def reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     url = update.message.text
 
+    await update.message.reply_text("Descargando reel...")
+
     try:
 
+        # =========================
+        # DESCARGAR VIDEO
+        # =========================
         ydl_opts = {
-            'format': 'best',
-            'outtmpl': 'video.mp4'
+            'format': 'bestvideo+bestaudio/best',
+            'outtmpl': 'video.mp4',
+            'quiet': True
         }
 
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
+        await update.message.reply_text("Buscando mejor captura...")
+
+        # =========================
+        # ABRIR VIDEO
+        # =========================
         video = cv2.VideoCapture("video.mp4")
 
-        # segundo exacto
-        video.set(cv2.CAP_PROP_POS_MSEC, 2000)
+        best_frame = None
+        best_score = 0
 
-        ok, frame = video.read()
+        frame_count = 0
 
-        if ok:
+        # =========================
+        # ANALIZAR FRAMES
+        # =========================
+        while True:
 
-            cv2.imwrite("captura.png", frame)
+            ret, frame = video.read()
 
-            await update.message.reply_photo(
-                photo=open("captura.png", "rb"),
-                caption="Captura HD lista"
-            )
+            if not ret:
+                break
+
+            frame_count += 1
+
+            # revisar 1 frame cada 10
+            if frame_count % 10 != 0:
+                continue
+
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+            # detectar nitidez
+            score = cv2.Laplacian(gray, cv2.CV_64F).var()
+
+            # guardar mejor frame
+            if score > best_score:
+                best_score = score
+                best_frame = frame
 
         video.release()
 
+        # =========================
+        # SI NO ENCUENTRA FRAME
+        # =========================
+        if best_frame is None:
+            await update.message.reply_text("No pude encontrar una captura.")
+            return
+
+        # =========================
+        # GUARDAR IMAGEN HD
+        # =========================
+        cv2.imwrite(
+            "captura_hd.png",
+            best_frame,
+            [cv2.IMWRITE_PNG_COMPRESSION, 0]
+        )
+
+        # =========================
+        # ENVIAR FOTO
+        # =========================
+        await update.message.reply_photo(
+            photo=open("captura_hd.png", "rb"),
+            caption="Captura HD lista"
+        )
+
+        # =========================
+        # BORRAR ARCHIVOS
+        # =========================
         if os.path.exists("video.mp4"):
             os.remove("video.mp4")
 
-        if os.path.exists("captura.png"):
-            os.remove("captura.png")
+        if os.path.exists("captura_hd.png"):
+            os.remove("captura_hd.png")
 
     except Exception as e:
-        await update.message.reply_text(str(e))
 
+        await update.message.reply_text(
+            f"Error:\n{str(e)}"
+        )
+
+# =========================
+# INICIAR BOT
+# =========================
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(
-    MessageHandler(filters.TEXT & ~filters.COMMAND, reel)
+    MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        reel
+    )
 )
 
 print("BOT ONLINE")
